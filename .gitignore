@@ -1,2 +1,7 @@
 .idea
 __pycache__
+downloaded_images/*
+uploaded_images/*
+
+!!downloaded_images/.gitkeep 
+!downloaded_images/.gitkeep 
