@@ -1,0 +1,6 @@
+torch
+json
+torchvision
+PIL
+os
+tqdm
