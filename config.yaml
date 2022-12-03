@@ -2,3 +2,4 @@ fit: true
 model_status: fitted
 ready: true
 status: test
+code: 0

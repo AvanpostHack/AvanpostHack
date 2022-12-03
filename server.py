@@ -1,3 +1,5 @@
+import json
+
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,7 +37,13 @@ def get_status_config():
 def get_status():
     config = get_status_config()
 
-    return {"status": config.status, "model_status": config.model_status, "code": config.code}
+    return {"status": config['status'], "model_status": config['model_status'], "code": config['code']}
+
+@app.get("/get_classes")
+def get_classes():
+    with open('config.json', 'r') as f:
+        class_list = json.load(f)
+        return class_list
 
 @app.post("/predict")
 def get_predict(files: List[UploadFile] = File(...)):
