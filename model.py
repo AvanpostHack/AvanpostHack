@@ -16,8 +16,8 @@ def get_predict_from_model(image_data: bytes) -> tuple[int, float]:
     return 10, 0.9 # return class index and confidence
 
 def model_fit():
-    pass
-    sleep(5)
+    print('go to sleep')
+    sleep(10)
     # нужно сделать чтобы модель записывала статус обучения
 
 def start_training(keyword: str):

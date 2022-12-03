@@ -1,0 +1,4 @@
+status: 'fine'
+ready: true
+model_status: 'fitted'
+fit: true
