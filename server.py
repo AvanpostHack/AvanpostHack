@@ -8,6 +8,8 @@ from typing import Union
 
 import uvicorn
 
+import yaml
+
 app = FastAPI(debug=True)
 
 origins = ["*"]
@@ -25,9 +27,15 @@ class Keyword(BaseModel):
     epoch: Union[int, None] = None
     accuracy: Union[float, None] = None
 
+def get_status_config():
+    with open('./config.yaml') as f:
+        return yaml.safe_load(f)
+
 @app.get("/status") # ОТКУДА брать инфу о статусе пока не ясно
 def get_status():
-    return {"status": "test", "model_status": "waiting", "code": 10}
+    config = get_status_config()
+
+    return {"status": config.status, "model_status": config.model_status, "code": config.code}
 
 @app.post("/predict")
 def get_predict(file: UploadFile = File(...)):
@@ -47,7 +55,8 @@ def get_predict(file: UploadFile = File(...)):
 def fit_model(keyword: Keyword):
     # print(keyword.keyword)
     start_training(keyword.keyword)
-    return {"status": "model fitted", "error": ""} # ГДЕ взять статус?
+    config = get_status_config()
+    return {"status": config.model_status, "error": ""}
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 

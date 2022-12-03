@@ -1,4 +1,5 @@
-status: 'fine'
+status: 'test'
 ready: true
-model_status: 'fitted'
+model_status: 'waiting'
 fit: true
+code: 10
