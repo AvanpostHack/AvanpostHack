@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from model import get_predict_from_model, start_training
-from typing import Union
+from typing import Union, List
 
 import uvicorn
 
@@ -31,32 +31,52 @@ def get_status_config():
     with open('./config.yaml') as f:
         return yaml.safe_load(f)
 
-@app.get("/status") # ОТКУДА брать инфу о статусе пока не ясно
+@app.get("/status")
 def get_status():
     config = get_status_config()
 
     return {"status": config.status, "model_status": config.model_status, "code": config.code}
 
 @app.post("/predict")
-def get_predict(file: UploadFile = File(...)):
-    try:
-        contents = file.file.read()
-        with open('uploaded_images/' + file.filename, 'wb') as f:
-            f.write(contents)
-    except Exception:
-        return {"error": "There was an error uploading the file"}
-    finally:
-        file.file.close()
+def get_predict(files: List[UploadFile] = File(...)):
 
-    class_, conf = get_predict_from_model(image_data = contents)
-    return {"predicted_class": class_, "сonfidence": conf, "error": " "}
+    file_names = []
+    file_data = []
+
+    for i, item in enumerate(files):
+        try:
+            contents = item.file.read()
+            file_names.append(item.filename)
+            with open('uploaded_images/' + item.filename, 'wb') as f:
+                f.write(contents)
+                file_data.append(contents)
+        except Exception:
+            return {"error": "There was an error uploading the file"}
+        finally:
+            item.file.close()
+
+    model_predicts = get_predict_from_model(file_data)
+
+    response_arr = []
+    for i, predict in enumerate(model_predicts):
+        file_name = ''
+        try:
+            file_name = file_names[i]
+        except:
+            file_name = ''
+
+        response_arr.append({"predicted_class": predict[0], "сonfidence": predict[1], "filename": file_name})
+
+    return {"preds_arr": response_arr, "error": ""}
+
 
 @app.post("/fit")
 def fit_model(keyword: Keyword):
     # print(keyword.keyword)
     start_training(keyword.keyword)
     config = get_status_config()
-    return {"status": config.model_status, "error": ""}
+
+    return {"status": config['model_status'], "error": ""}
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
