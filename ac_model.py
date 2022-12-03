@@ -12,6 +12,11 @@ from torchvision import datasets, models, transforms
 from PIL import Image, ImageOps, ImageEnhance
 from PIL import ImageFile
 
+# Библиотека для скачивания изображений из Google
+# !pip install Google-Images-Search
+# !pip install windows-curses
+from google_images_search import GoogleImagesSearch
+
 # Из-за того что при загрузке данных могут попадаться файлы не только в RGB но и в RGBA, требуется установить доп. условие
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -31,8 +36,8 @@ PATH_DATASET = "datasets"
 PATH_DATASET_TRAIN = PATH_DATASET + "/train"
 PATH_DATASET_VAL = PATH_DATASET + "/val"
 PATH_DATASET_TEST = PATH_DATASET + "/test"
-FILE_CONFIG = 'config.json' # Здесь хранятся все классы к текущей модели
-
+FILE_CLASSES = 'classes.json'  # Здесь хранятся все классы к текущей модели
+FILE_CONFIG = 'prj_config.json'  # Здесь хранятся ключи для загрузки изображений
 
 
 class ACLoaderDataset():
@@ -59,7 +64,41 @@ class ACLoaderDataset():
             ]),
         }
 
-    def create_val_dataset(self, val_size=0.2):
+    def add_new_class(self, classname, num=200, resize=500):
+        path_new_class = PATH_DATASET_TRAIN + f"/{classname}"
+        for _ in range(3):
+            try:
+                self.search_download_img(classname, path_new_class=path_new_class, num=num, resize=resize)
+                break
+            except:
+                time.sleep(10)
+                continue
+        self.create_val_dataset(val_size=0.1)
+        return path_new_class
+
+    def search_download_img(self, classname, path_new_class, num=200, resize=500):
+        # Read keys from config
+        with open(FILE_CONFIG, 'r') as f:
+            config = json.load(f)
+        google_developer_key = config['google_developer_key']
+        google_custom_search_cx = config['google_custom_search_cx']
+
+        gis = GoogleImagesSearch(google_developer_key, google_custom_search_cx)
+        # Множественный выбор параметров пока недоступен
+        _search_params = {
+            'q': classname,
+            'num': num,
+            'fileType': 'jpg',
+            'imgType': 'photo',
+            'imgSize': 'medium',
+            'imgColorType': 'color'
+        }
+        # this will search, download and resize:
+        gis.search(search_params=_search_params, path_to_dir=(PATH_DATASET_TRAIN + f"/{classname}"), width=resize,
+                   height=resize)
+        return path_new_class
+
+    def create_val_dataset(self, val_size=0.1):
         val_dirs = [dir for dir in listdir(PATH_DATASET_VAL) if not isfile(join(PATH_DATASET_VAL, dir))]
         for exist_dir in [dir for dir in listdir(PATH_DATASET_TRAIN) if not isfile(join(PATH_DATASET_TRAIN, dir))]:
             train_dir = PATH_DATASET_TRAIN + f"/{exist_dir}"
@@ -135,7 +174,7 @@ class ACModel():
         # save classname
         config = {}
         config['CLASSES'] = self.class_names
-        with open(FILE_CONFIG, 'w') as f:
+        with open(FILE_CLASSES, 'w') as f:
             json.dump(config, f, indent=2)
         return self.class_names
 
@@ -146,7 +185,7 @@ class ACModel():
 
     def load_classes(self):
         # load classname
-        with open(FILE_CONFIG, 'r') as f:
+        with open(FILE_CLASSES, 'r') as f:
             config = json.load(f)
         self.class_names = config['CLASSES']
         return self.class_names
@@ -271,12 +310,17 @@ class ACModel():
 
 
 if __name__ == "__main__":
+    # Загрузка нового класса изображений
+    ac_loader = ACLoaderDataset(size_img=200, batch_size=10, num_workers=0, use_gpu=False)
+    path_load = ac_loader.add_new_class(classname="skateboard", num=800)
+
+    # При добавлении нового класса делается автоматом
     # Подразумевается что в каталоге dataset/train расположены тернировочные датасеты
     # Но для моедли надо отдельно выделить валидационные данные
     # Формирвоание Валидацинных данных. Если в dataset/val нет каталога, который есть в dataset/train,
     # то производим добавление соответсвтующего класса и переносим часть данных как валидационных
-    ac_loader = ACLoaderDataset(size_img=200, use_gpu=False)
-    ac_loader.create_val_dataset(val_size=0.1)
+    # ac_loader = ACLoaderDataset(size_img=200, use_gpu=False)
+    # ac_loader.create_val_dataset(val_size=0.1)
 
     # Начальное формирование модели по тем классам по которым есть данные
     ac_model = ACModel(size_img=200, batch_size=10, num_epochs=2, check_gpu=False, num_workers=0)
