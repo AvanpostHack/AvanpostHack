@@ -1,4 +1,6 @@
 import json
+import os
+import pathlib
 
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
@@ -29,6 +31,13 @@ class Keyword(BaseModel):
     epoch: Union[int, None] = None
     accuracy: Union[float, None] = None
 
+def clean_folders(file_path: str):
+    for filepath in pathlib.Path(file_path).glob('**/*'):
+        if not '.gitkeep' in str(filepath):
+            os.remove(filepath)
+
+clean_folders('./downloaded_images')
+clean_folders('./uploaded_images')
 def get_status_config():
     with open('./config.yaml') as f:
         return yaml.safe_load(f)
