@@ -120,20 +120,23 @@
     }
 
     $.ajax({
-        url: "/status",
         type: 'GET',
+        url: "/get_classes",
         dataType: 'json',
-        success: function(res) {
+        success: (res) => {
             let tableContent = ''
-            for (let x = 0; x < Object.keys(res.data["CLASSES"]).length; x++) {
+            for (let x = 0; x < Object.keys(res["CLASSES"]).length; x++) {
                 tableContent += `
                     <tr>
                         <td>${x+1}</td>
-                        <td>${res.data["CLASSES"][x].toLocaleUpperCase()}</td>
+                        <td>${res["CLASSES"][x].toLocaleUpperCase()}</td>
                     </tr>
                 `
             }
             $('table').empty().append(tableContent);
+        },
+        error: (request, error) => {
+            fireAlert("error", "Возникла ошибка!", 1500);
         }
     });
 
@@ -149,16 +152,19 @@
     });
 
     $('#add_class_button').click(() => {
-        e.preventDefault();
+        const data = {
+            "keyword": $('input[name="class__input"]').val(),
+        }
         $.ajax({
+            type: 'POST',
             url: "/fit",
-            type: 'GET',
-            data: {
-                something: $('input[name="class__input"]').val(),
-            },
+            data: data,
             dataType: 'json',
-            success: function(res) {
+            success: (res) => {
                 fireAlert('success', 'Новый класс загружен! Дождитесь переобучения модели, пожалуйста!', 3500);
+            },
+            error: (request, error) => {
+                fireAlert("error", "Возникла ошибка!", 1500);
             }
         });
     });
@@ -168,10 +174,8 @@
 
     $('#send_images_button').click((e) => {
         e.preventDefault();
-
         images = {};
         image_data_urls = {};
-
         for (let x = 0; x < $('input[name="file__input"]')[0].files.length; x++) {
             let reader = new FileReader();
             reader.readAsDataURL($('input[name="file__input"]')[0].files[x]);
@@ -180,18 +184,6 @@
                 image_data_urls['data-url-' + $('input[name="file__input"]')[0].files[x].name] = reader.result;
             }
         }
-        
-        $.ajax({
-            url: "/predict",
-            type: 'POST',
-            contentType: 'application/json',
-            data:  images,
-            dataType: 'json',
-            success: function(res) {
-                fireAlert('success', 'Файлы загружены! Дождитесь окончания классификация, пожалуйста!', 3500);
-            }
-        });
-
         const dataURLtoFile = (dataurl, filename) => {
             var arr = dataurl.split(','),
                 mime = arr[0].match(/:(.*?);/)[1],
@@ -205,8 +197,23 @@
             
             return new File([u8arr], filename, {type:mime});
         }
-
         setTimeout(() => {
+            const data = {
+                "images": images
+            }
+            $.ajax({
+                type: 'POST',
+                url: "/predict",
+                contentType: 'application/json',
+                data:  data,
+                dataType: 'json',
+                success: (res) => {
+                    fireAlert('success', 'Файлы загружены! Дождитесь окончания классификация, пожалуйста!', 3500);
+                },
+                error: (request, error) => {
+                    fireAlert("error", "Возникла ошибка!", 1500);
+                }
+            });
             for (let x in image_data_urls) {
                 $('.image_wrapper').append(`
                     <div class="image_container">
