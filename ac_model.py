@@ -191,17 +191,21 @@ class ACModel():
         return self.class_names
 
     def predict_imagefiles(self):
+
         ac_loader = ACLoaderDataset(size_img=self.size_img, batch_size=self.batch_size)
         data_transforms = ac_loader.data_transforms["val"]
         detected_files = {}
         for image_file in [file for file in listdir(PATH_DATASET_TEST) if isfile(join(PATH_DATASET_TEST, file))]:
+            if image_file == '.gitkeep':
+                continue
             filename = PATH_DATASET_TEST + "/" + image_file
             img = Image.open(filename)
             # Для png RGBA Необходимо исключать прозрачный слой за счет перевода в RGB
             img = img.convert('RGB')
             x = data_transforms(img)
             x = x.unsqueeze(0)
-            predict_classname = load_ac_model.model_extractor(x)
+            # predict_classname = load_ac_model.model_extractor(x)
+            predict_classname = self.model_extractor(x)
             detect_classname = self.class_names[torch.argmax(predict_classname, -1)]
             detected_files[image_file] = detect_classname
         return detected_files

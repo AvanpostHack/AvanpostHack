@@ -11,7 +11,7 @@ from model import get_predict_from_model, start_training
 from typing import Union, List
 
 import uvicorn
-
+import base64
 import yaml
 
 app = FastAPI(debug=True)
@@ -38,6 +38,7 @@ def clean_folders(file_path: str):
 
 clean_folders('./downloaded_images')
 clean_folders('./uploaded_images')
+clean_folders('./datasets/test')
 def get_status_config():
     with open('./config.yaml') as f:
         return yaml.safe_load(f)
@@ -50,7 +51,7 @@ def get_status():
 
 @app.get("/get_classes")
 def get_classes():
-    with open('config.json', 'r') as f:
+    with open('./classes.json', 'r') as f:
         class_list = json.load(f)
         return class_list
 
@@ -63,6 +64,7 @@ def get_predict(files: List[UploadFile] = File(...)):
     for i, item in enumerate(files):
         try:
             contents = item.file.read()
+            contents = base64.b64decode(contents)
             file_names.append(item.filename)
             with open('datasets/test/' + item.filename, 'wb') as f:
                 f.write(contents)
@@ -73,18 +75,19 @@ def get_predict(files: List[UploadFile] = File(...)):
             item.file.close()
 
     model_predicts = get_predict_from_model(file_data)
+    return model_predicts
 
-    response_arr = []
-    for i, predict in enumerate(model_predicts):
-        file_name = ''
-        try:
-            file_name = file_names[i]
-        except:
-            file_name = ''
-
-        response_arr.append({"predicted_class": predict[0], "сonfidence": predict[1], "filename": file_name})
-
-    return {"preds_arr": response_arr, "error": ""}
+    # response_arr = []
+    # for i, predict in enumerate(model_predicts):
+    #     file_name = ''
+    #     try:
+    #         file_name = file_names[i]
+    #     except:
+    #         file_name = ''
+    #
+    #     response_arr.append({"predicted_class": predict[0], "сonfidence": predict[1], "filename": file_name})
+    #
+    # return {"preds_arr": response_arr, "error": ""}
 
 
 @app.post("/fit")
