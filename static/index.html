@@ -108,6 +108,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script type="module">
 
     const fireAlert = (icon, text, timer) => {
@@ -119,12 +120,9 @@
         })
     }
 
-    $.ajax({
-        type: 'GET',
-        url: "/get_classes",
-        dataType: 'json',
-        success: (res) => {
-            let tableContent = ''
+    axios.get('/get_classes')
+    .then(res =>{
+        let tableContent = ''
             for (let x = 0; x < Object.keys(res["CLASSES"]).length; x++) {
                 tableContent += `
                     <tr>
@@ -133,12 +131,11 @@
                     </tr>
                 `
             }
-            $('table').empty().append(tableContent);
-        },
-        error: (request, error) => {
-            fireAlert("error", "Возникла ошибка!", 1500);
-        }
-    });
+        $('table').empty().append(tableContent);
+    })
+    .catch(err => {
+        fireAlert("error", "Возникла ошибка при загрузке текущих классов!", 1500);
+    })
 
     $('.tab_button').click((e) => {
         e.target.classList.add('active');
@@ -155,18 +152,13 @@
         const data = {
             "keyword": $('input[name="class__input"]').val(),
         }
-        $.ajax({
-            type: 'POST',
-            url: "/fit",
-            data: data,
-            dataType: 'json',
-            success: (res) => {
-                fireAlert('success', 'Новый класс загружен! Дождитесь переобучения модели, пожалуйста!', 3500);
-            },
-            error: (request, error) => {
-                fireAlert("error", "Возникла ошибка!", 1500);
-            }
-        });
+        axios.post('/fit', data)
+        .then(res => {
+            fireAlert('success', 'Новый класс загружен! Дождитесь переобучения модели, пожалуйста!', 3500);
+        })
+        .catch(err => {
+            fireAlert("error", "Возникла ошибка при отправке нового класса!", 1500);
+        })
     });
 
     var images;
@@ -197,22 +189,14 @@
             return new File([u8arr], filename, {type:mime});
         }
         setTimeout(() => {
-            const data = {
-                "images": images
-            }
-            $.ajax({
-                type: 'POST',
-                url: "/predict",
-                contentType: 'application/json',
-                data:  data,
-                dataType: 'json',
-                success: (res) => {
-                    fireAlert('success', 'Файлы загружены! Дождитесь окончания классификация, пожалуйста!', 3500);
-                },
-                error: (request, error) => {
-                    fireAlert("error", "Возникла ошибка!", 1500);
-                }
-            });
+            axios.post('predict', images)
+            .then(res => {
+                console.log(res);
+                fireAlert('success', 'Файлы загружены! Дождитесь окончания классификации, пожалуйста!', 3500);
+            })
+            .catch(err => {
+                fireAlert("error", "Возникла ошибка при отправке файлов!", 1500);
+            })
             for (let x in image_data_urls) {
                 $('.image_wrapper').append(`
                     <div class="image_container">
