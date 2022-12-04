@@ -26,10 +26,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class Keyword(BaseModel):
-    keyword: str
-    epoch: Union[int, None] = None
-    accuracy: Union[float, None] = None
+# class Keyword(BaseModel):
+#     keyword: str
 
 def clean_folders(file_path: str):
     for filepath in pathlib.Path(file_path).glob('**/*'):
@@ -91,9 +89,8 @@ def get_predict(files: List[UploadFile] = File(...)):
 
 
 @app.post("/fit")
-def fit_model(keyword: Keyword):
-    # print(keyword.keyword)
-    start_training(keyword.keyword)
+def fit_model(keyword: str = Form(...)):
+    start_training(keyword)
     config = get_status_config()
 
     return {"status": config['model_status'], "error": ""}
