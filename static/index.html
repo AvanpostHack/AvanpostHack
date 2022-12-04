@@ -198,7 +198,7 @@
                 fireAlert("error", "Возникла ошибка при отправке файлов!", 1500);
             })
             for (let x in image_data_urls) {
-                $('.image_wrapper').append(`
+                $('.image_wrapper').empty().append(`
                     <div class="image_container">
                         <img class="image" src="${image_data_urls[x]}">
                         <p id="${image_data_urls[x]}" class="image_class">Название класса</p>
