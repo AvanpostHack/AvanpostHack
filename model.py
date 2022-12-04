@@ -26,10 +26,10 @@ def get_predict_from_model(image_data: list[bytes]) -> list[tuple[int, float]]:
 
     return detected_files # return class index and confidence
 
-def model_fit():
+def model_fit(keyword:str):
     # Загрузка нового класса изображений
     ac_loader = ACLoaderDataset(size_img=128, batch_size=10, num_workers=0, use_gpu=False)
-    path_load = ac_loader.add_new_class(classname="skateboard", num=800)
+    path_load = ac_loader.add_new_class(classname=keyword, num=800)
 
     # При добавлении нового класса делается автоматом
     # Подразумевается что в каталоге dataset/train расположены тернировочные датасеты
@@ -64,5 +64,5 @@ def start_training(keyword: str):
     start_train_config()
     # start_image_downloads(keyword, './downloaded_images')
 
-    model_fit() # запускаем дообучение модели
+    model_fit(keyword) # запускаем дообучение модели
     end_train_config()
