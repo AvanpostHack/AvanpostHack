@@ -1,12 +1,18 @@
-from fastapi import FastAPI, File, UploadFile, Form
+import json
+import os
+import pathlib
+
+from fastapi import FastAPI, File, UploadFile, Form, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from model import get_predict_from_model, start_training
-from typing import Union
+from typing import Union, List
 
 import uvicorn
+import base64
+import yaml
 
 app = FastAPI(debug=True)
 
@@ -20,34 +26,74 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class Keyword(BaseModel):
-    keyword: str
-    epoch: Union[int, None] = None
-    accuracy: Union[float, None] = None
+# class Keyword(BaseModel):
+#     keyword: str
 
-@app.get("/status") # ОТКУДА брать инфу о статусе пока не ясно
+def clean_folders(file_path: str):
+    for filepath in pathlib.Path(file_path).glob('**/*'):
+        if not '.gitkeep' in str(filepath):
+            os.remove(filepath)
+
+clean_folders('./downloaded_images')
+clean_folders('./uploaded_images')
+clean_folders('./datasets/test')
+def get_status_config():
+    with open('./config.yaml') as f:
+        return yaml.safe_load(f)
+
+@app.get("/status")
 def get_status():
-    return {"status": "test", "model_status": "waiting", "code": 10}
+    config = get_status_config()
+
+    return {"status": config['status'], "model_status": config['model_status'], "code": config['code']}
+
+@app.get("/get_classes")
+def get_classes():
+    with open('./classes.json', 'r') as f:
+        class_list = json.load(f)
+        return class_list
 
 @app.post("/predict")
-def get_predict(file: UploadFile = File(...)):
-    try:
-        contents = file.file.read()
-        with open('uploaded_images/' + file.filename, 'wb') as f:
-            f.write(contents)
-    except Exception:
-        return {"error": "There was an error uploading the file"}
-    finally:
-        file.file.close()
+def get_predict(images: List[UploadFile] = File(...)):
 
-    class_, conf = get_predict_from_model(image_data = contents)
-    return {"predicted_class": class_, "сonfidence": conf, "error": " "}
+    file_names = []
+    file_data = []
+
+    for i, item in enumerate(images):
+        try:
+            contents = item.file.read()
+            contents = base64.b64decode(contents)
+            file_names.append(item.filename)
+            with open('datasets/test/' + item.filename, 'wb') as f:
+                f.write(contents)
+                file_data.append(contents)
+        except Exception:
+            return {"error": "There was an error uploading the file"}
+        finally:
+            item.file.close()
+
+    model_predicts = get_predict_from_model(file_data)
+    return model_predicts
+
+    # response_arr = []
+    # for i, predict in enumerate(model_predicts):
+    #     file_name = ''
+    #     try:
+    #         file_name = file_names[i]
+    #     except:
+    #         file_name = ''
+    #
+    #     response_arr.append({"predicted_class": predict[0], "сonfidence": predict[1], "filename": file_name})
+    #
+    # return {"preds_arr": response_arr, "error": ""}
+
 
 @app.post("/fit")
-def fit_model(keyword: Keyword):
-    # print(keyword.keyword)
-    start_training(keyword.keyword)
-    return {"status": "model fitted", "error": ""} # ГДЕ взять статус?
+def fit_model(keyword: str = Form(...)):
+    start_training(keyword)
+    config = get_status_config()
+
+    return {"status": config['model_status'], "error": ""}
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 

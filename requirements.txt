@@ -1,0 +1,16 @@
+torch~=1.10.2+cu113
+json
+torchvision~=0.11.3+cu113
+PIL
+os
+tqdm~=4.60.0
+Google-Images-Search
+windows-curses
+requests~=2.25.1
+pyyaml~=5.1.2
+Pillow~=8.4.0
+uvicorn~=0.17.0
+fastapi~=0.75.1
+pydantic~=1.9.0
+clip~=1.0
+scipy~=1.5.4
