@@ -172,7 +172,7 @@
             reader.readAsDataURL($('input[name="file__input"]')[0].files[x]);
             reader.onload = () => {
                 images[$('input[name="file__input"]')[0].files[x].name] = (reader.result).split(',')[1];
-                image_data_urls['data-url-' + $('input[name="file__input"]')[0].files[x].name] = reader.result;
+                image_data_urls[$('input[name="file__input"]')[0].files[x].name] = reader.result;
             }
         }
         const dataURLtoFile = (dataurl, filename) => {
@@ -188,23 +188,25 @@
             
             return new File([u8arr], filename, {type:mime});
         }
+        console.log(images);
+        console.log(image_data_urls);
         setTimeout(() => {
             axios.post('predict', images)
             .then(res => {
-                console.log(res);
                 fireAlert('success', 'Файлы загружены! Дождитесь окончания классификации, пожалуйста!', 3500);
+                console.log(res);
+                for (let x in image_data_urls) {
+                    $('.image_wrapper').empty().append(`
+                        <div class="image_container">
+                            <img class="image" src="${image_data_urls[x]}">
+                            <p id="${image_data_urls[x]}" class="image_class">${res.data[x]}</p>
+                        </div>
+                    `);
+                }
             })
             .catch(err => {
                 fireAlert("error", "Возникла ошибка при отправке файлов!", 1500);
             })
-            for (let x in image_data_urls) {
-                $('.image_wrapper').empty().append(`
-                    <div class="image_container">
-                        <img class="image" src="${image_data_urls[x]}">
-                        <p id="${image_data_urls[x]}" class="image_class">Название класса</p>
-                    </div>
-                `);
-            }
         }, 1500);
     });
 
