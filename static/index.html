@@ -172,8 +172,7 @@
     var images;
     var image_data_urls;
 
-    $('#send_images_button').click((e) => {
-        e.preventDefault();
+    $('#send_images_button').click(() => {
         images = {};
         image_data_urls = {};
         for (let x = 0; x < $('input[name="file__input"]')[0].files.length; x++) {
