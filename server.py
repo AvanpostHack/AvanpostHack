@@ -54,12 +54,12 @@ def get_classes():
         return class_list
 
 @app.post("/predict")
-def get_predict(files: List[UploadFile] = File(...)):
+def get_predict(images: List[UploadFile] = File(...)):
 
     file_names = []
     file_data = []
 
-    for i, item in enumerate(files):
+    for i, item in enumerate(images):
         try:
             contents = item.file.read()
             contents = base64.b64decode(contents)

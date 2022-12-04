@@ -87,7 +87,7 @@
             </div>
     
             <div class="tab_wrapper" id="tab_3">
-                <form action="#" id="file_form" class="form__content">
+                <div id="file_form" class="form__content">
                     <h1>FILES</h1>
                     <div class="form__box">
                         <input style="padding-bottom: 35px;" name="file__input" type="file" class="form__input" placeholder="Загрузка файлов" multiple>
@@ -96,9 +96,9 @@
                     </div>
             
                     <div style="margin-top: 8px;" class="form__button">
-                        <button type="submit" class="form__submit" id="send_images_button">Отправить</button>
+                        <button class="form__submit" id="send_images_button">Отправить</button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
 
@@ -417,9 +417,9 @@ table {
 .image_wrapper {
     width: 100%;
     height: 100%;
-    padding: 3%;
+    padding: 1% 3% 3% 5%;
     display: grid;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     grid-template-columns: repeat(3, 1fr);
 }
