@@ -3,5 +3,15 @@ __pycache__
 downloaded_images/*
 uploaded_images/*
 
+datasets/train/*
+datasets/val/*
+datasets/test/*
+
 !!downloaded_images/.gitkeep 
 !downloaded_images/.gitkeep 
+
+!datasets/train/.gitkeep
+!datasets/val/.gitkeep
+!datasets/test/.gitkeep
+
+prj_config.json

@@ -1,0 +1,8 @@
+torch
+json
+torchvision
+PIL
+os
+tqdm
+Google-Images-Search
+windows-curses

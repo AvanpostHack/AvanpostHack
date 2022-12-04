@@ -1,0 +1,15 @@
+{
+  "CLASSES": [
+    "bicycles",
+    "dump_truck",
+    "horse",
+    "lawn_mower",
+    "minibus",
+    "skateboard",
+    "skis",
+    "snowboard",
+    "tractors",
+    "train",
+    "truck"
+  ]
+}

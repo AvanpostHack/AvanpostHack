@@ -64,7 +64,7 @@ def get_predict(files: List[UploadFile] = File(...)):
         try:
             contents = item.file.read()
             file_names.append(item.filename)
-            with open('uploaded_images/' + item.filename, 'wb') as f:
+            with open('datasets/test/' + item.filename, 'wb') as f:
                 f.write(contents)
                 file_data.append(contents)
         except Exception:
