@@ -123,11 +123,11 @@
     axios.get('/get_classes')
     .then(res =>{
         let tableContent = ''
-            for (let x = 0; x < Object.keys(res["CLASSES"]).length; x++) {
+            for (let x = 0; x < Object.keys(res.data.CLASSES).length; x++) {
                 tableContent += `
                     <tr>
                         <td>${x+1}</td>
-                        <td>${res["CLASSES"][x].toLocaleUpperCase()}</td>
+                        <td>${res.data.CLASSES[x].toLocaleUpperCase()}</td>
                     </tr>
                 `
             }

@@ -2,7 +2,7 @@ import json
 import os
 import pathlib
 
-from fastapi import FastAPI, File, UploadFile, Form, Request
+from fastapi import FastAPI, File, UploadFile, Form, Request, Body
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -26,8 +26,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# class Keyword(BaseModel):
-#     keyword: str
+class Keyword(BaseModel):
+    keyword: str
 
 def clean_folders(file_path: str):
     for filepath in pathlib.Path(file_path).glob('**/*'):
@@ -54,25 +54,23 @@ def get_classes():
         return class_list
 
 @app.post("/predict")
-def get_predict(images: List[UploadFile] = File(...)):
+def get_predict(images: dict = Body(...)):
 
     file_names = []
     file_data = []
 
-    for i, item in enumerate(images):
+    for key, value in images.items():
         try:
-            contents = item.file.read()
-            contents = base64.b64decode(contents)
-            file_names.append(item.filename)
-            with open('datasets/test/' + item.filename, 'wb') as f:
+            contents = base64.b64decode(value)
+            file_names.append(key)
+            with open('datasets/test/' + key, 'wb') as f:
                 f.write(contents)
                 file_data.append(contents)
         except Exception:
             return {"error": "There was an error uploading the file"}
-        finally:
-            item.file.close()
 
     model_predicts = get_predict_from_model(file_data)
+    clean_folders('./datasets/test')
     return model_predicts
 
     # response_arr = []
@@ -89,8 +87,8 @@ def get_predict(images: List[UploadFile] = File(...)):
 
 
 @app.post("/fit")
-def fit_model(keyword: str = Form(...)):
-    start_training(keyword)
+def fit_model(keyword: Keyword):
+    start_training(keyword.keyword)
     config = get_status_config()
 
     return {"status": config['model_status'], "error": ""}
